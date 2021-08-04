@@ -15,7 +15,7 @@ impl Gen {
         Gen {
             code: Vec::with_capacity(1024),
             dent: 0,
-            spaces_per_indent: 2,
+            spaces_per_indent: 4,
         }
     }
 
