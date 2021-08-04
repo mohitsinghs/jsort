@@ -25,11 +25,9 @@ fn main() {
     // build types
     let files: &str = matches.value_of("input").expect("Input can't be empty");
     let mut tb = TypesBuilder::new();
-    tb.add_def("yaml:*.{yml,yaml}")
-        .expect("Failed to add types");
-
+    tb.add_def("json:*.json").expect("Failed to add types");
     let types = tb
-        .select("yaml")
+        .select("json")
         .build()
         .expect("Failed to build filetypes");
 
