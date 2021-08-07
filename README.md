@@ -7,7 +7,7 @@
 
 ## Purpose
 
-I needed something to sort object keys quickly inside huge json files, so I put together this quickly.
+I needed something fast to sort object keys inside huge json files, so I put together this quickly. That job is done and now this dude lives in my system waiting for it's chance.
 
 ## Building
 
