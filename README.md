@@ -26,7 +26,7 @@ cd sort-of
 cargo build --release
 ```
 
-3. Add install that to system.
+3. And install our binary.
 
 ```sh
 sudo install ./target/release/sort-of /usr/local/bin
