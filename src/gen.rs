@@ -1,5 +1,6 @@
 use json::codegen::Generator;
 use json::object::Object;
+use json::JsonValue;
 use std::collections::BTreeMap;
 use std::io;
 
@@ -15,7 +16,7 @@ impl Gen {
         Gen {
             code: Vec::with_capacity(1024),
             dent: 0,
-            spaces_per_indent: 4,
+            spaces_per_indent: 2,
         }
     }
 
@@ -47,7 +48,8 @@ impl Generator for Gen {
             self.indent();
             self.new_line()?;
             self.write_string(key)?;
-            self.write_min(b": ", b':')?;
+            self.write_char(b':')?;
+            self.write_char(b' ')?;
             self.write_json(value)?;
         } else {
             self.write_char(b'}')?;
@@ -58,13 +60,49 @@ impl Generator for Gen {
             self.write_char(b',')?;
             self.new_line()?;
             self.write_string(key)?;
-            self.write_min(b": ", b':')?;
+            self.write_char(b':')?;
+            self.write_char(b' ')?;
             self.write_json(value)?;
         }
 
         self.dedent();
         self.new_line()?;
         self.write_char(b'}')
+    }
+
+    fn write_json(&mut self, json: &JsonValue) -> io::Result<()> {
+        match *json {
+            JsonValue::Null => self.write(b"null"),
+            JsonValue::Short(ref short) => self.write_string(short.as_str()),
+            JsonValue::String(ref string) => self.write_string(string),
+            JsonValue::Number(ref number) => self.write_number(number),
+            JsonValue::Boolean(true) => self.write(b"true"),
+            JsonValue::Boolean(false) => self.write(b"false"),
+            JsonValue::Array(ref array) => {
+                self.write_char(b'[')?;
+                let mut iter = array.iter();
+
+                if let Some(item) = iter.next() {
+                    self.indent();
+                    self.new_line()?;
+                    self.write_json(item)?;
+                } else {
+                    self.write_char(b']')?;
+                    return Ok(());
+                }
+
+                for item in iter {
+                    self.write_char(b',')?;
+                    self.new_line()?;
+                    self.write_json(item)?;
+                }
+
+                self.dedent();
+                self.new_line()?;
+                self.write_char(b']')
+            }
+            JsonValue::Object(ref object) => self.write_object(object),
+        }
     }
 
     fn new_line(&mut self) -> io::Result<()> {
