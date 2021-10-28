@@ -21,9 +21,7 @@ fn main() {
     let walk = WalkBuilder::new(files).types(types).build();
     walk.filter_map(|d| d.ok()).for_each(|dir| {
         if dir.path().is_file() {
-            println!("Got here : {}", dir.path().display());
             let file = read_to_string(dir.path()).unwrap();
-            println!("Found data : {}", file);
             let data: JsonValue = json::parse(file.as_str()).expect("failed to parse");
             let mut gen = Gen::new();
             gen.write_json(&data).unwrap();
