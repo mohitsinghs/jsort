@@ -9,6 +9,8 @@ pub struct Gen {
     code: Vec<u8>,
     dent: u16,
     spaces_per_indent: u16,
+    max_width: u16,
+    key_length: u16,
 }
 
 impl Gen {
@@ -17,11 +19,46 @@ impl Gen {
             code: Vec::with_capacity(1024),
             dent: 0,
             spaces_per_indent: 2,
+            max_width: 80,
+            key_length: 0,
         }
     }
 
     pub fn consume(self) -> String {
         unsafe { String::from_utf8_unchecked(self.code) }
+    }
+}
+
+fn get_char_width(json: &JsonValue) -> usize {
+    match json {
+        JsonValue::Null => 4,
+        JsonValue::Boolean(val) => val.to_string().len(),
+        JsonValue::Number(num) => {
+            let mut len = num.to_string().len();
+            if num.to_string().contains(".") {
+                len += 1;
+            }
+            len
+        }
+        JsonValue::String(str) => str.len() + 2,
+        JsonValue::Array(arr) => {
+            let mut sum = 0;
+            for val in arr {
+                sum += get_char_width(val) + 1;
+            }
+            sum + 2
+        }
+        JsonValue::Object(obj) => {
+            let mut max = 0;
+            for (key, val) in obj.iter() {
+                let len = get_char_width(val) + key.len() + 3;
+                if len > max {
+                    max = len;
+                }
+            }
+            max + 2
+        }
+        JsonValue::Short(short) => short.to_string().len() + 2,
     }
 }
 
@@ -38,6 +75,7 @@ impl Generator for Gen {
         self.code.push(min);
         Ok(())
     }
+
     #[inline(always)]
     fn write_object(&mut self, object: &Object) -> io::Result<()> {
         self.write_char(b'{')?;
@@ -45,6 +83,7 @@ impl Generator for Gen {
 
         let mut iter = entries.iter();
         if let Some((key, value)) = iter.next() {
+            self.key_length += key.len() as u16 + 3;
             self.indent();
             self.new_line()?;
             self.write_string(key)?;
@@ -53,10 +92,12 @@ impl Generator for Gen {
             self.write_json(value)?;
         } else {
             self.write_char(b'}')?;
+            self.key_length = 0;
             return Ok(());
         }
 
         for (key, value) in iter {
+            self.key_length += key.len() as u16 + 3;
             self.write_char(b',')?;
             self.new_line()?;
             self.write_string(key)?;
@@ -67,6 +108,7 @@ impl Generator for Gen {
 
         self.dedent();
         self.new_line()?;
+        self.key_length = 0;
         self.write_char(b'}')
     }
 
@@ -79,26 +121,33 @@ impl Generator for Gen {
             JsonValue::Boolean(true) => self.write(b"true"),
             JsonValue::Boolean(false) => self.write(b"false"),
             JsonValue::Array(ref array) => {
+                let estimated_width = self.dent * self.spaces_per_indent
+                    + get_char_width(json) as u16
+                    + self.key_length
+                    + 2;
+                let should_break: bool = estimated_width > self.max_width;
                 self.write_char(b'[')?;
-                let mut iter = array.iter();
-
-                if let Some(item) = iter.next() {
-                    self.indent();
+                self.indent();
+                if should_break {
                     self.new_line()?;
-                    self.write_json(item)?;
-                } else {
-                    self.write_char(b']')?;
-                    return Ok(());
                 }
 
-                for item in iter {
-                    self.write_char(b',')?;
-                    self.new_line()?;
+                for (i, item) in array.iter().enumerate() {
                     self.write_json(item)?;
+                    if i < array.len() - 1 {
+                        self.write_char(b',')?;
+                        if should_break {
+                            self.new_line()?;
+                        } else {
+                            self.write_char(b' ')?;
+                        }
+                    }
                 }
 
                 self.dedent();
-                self.new_line()?;
+                if should_break {
+                    self.new_line()?;
+                }
                 self.write_char(b']')
             }
             JsonValue::Object(ref object) => self.write_object(object),
