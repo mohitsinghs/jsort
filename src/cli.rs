@@ -1,7 +1,7 @@
-use clap::{crate_description, crate_name, crate_version, App, Arg, ArgMatches};
+use clap::{crate_description, crate_name, crate_version, Arg, ArgMatches, Command};
 
 pub fn parse() -> ArgMatches {
-    let app = App::new(crate_name!())
+    let cmd = Command::new(crate_name!())
         .version(crate_version!())
         .about(crate_description!())
         .args(&[
@@ -28,5 +28,5 @@ pub fn parse() -> ArgMatches {
                 .default_value("sorted")
                 .required(false),
         ]);
-    app.get_matches()
+    cmd.get_matches()
 }
