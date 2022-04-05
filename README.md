@@ -1,41 +1,26 @@
-<h1 align='center'>jsort</h1>
-<p align="center">
-  <b>sort json, faster</b><br />
-  <sub>command line tool to sort json recursively and faster</sub>
-</p>
-<br />
+# jsort <img alt="GitHub Workflow Status" src="https://img.shields.io/github/workflow/status/mohitsinghs/jsort/release?style=flat-square" /> <img alt="GitHub" src="https://img.shields.io/github/license/mohitsinghs/jsort?style=flat-square" />
 
-## Purpose
+Sort JSON recursiverly and faster
 
-I needed something fast to sort object keys inside huge json files.
+## Installing
 
-## Building
-
-Make sure you have rust and cargo installed.
-
-1. Clone the repo.
-
-```sh
-git clone https://github.com/mohitsinghs/jsort
-```
-
-2. Now compile a release binary.
-
-```sh
-cd jsort
-cargo build --release
-```
-
-3. And install our binary.
-
-```sh
-sudo install ./target/release/jsort /usr/local/bin
-```
+Download [latest release](https://github.com/mohitsinghs/jsort/releases/latest) for your system and put it in the path.
 
 ## Usage
 
 ```sh
-jsort <json-file(s)|(json-file-glob)>
+USAGE:
+    jsort [OPTIONS] <input>
+
+ARGS:
+    <input>    files/directory to process
+
+OPTIONS:
+    -h, --help               Print help information
+    -o, --out <out>          output directory ( ignores suffix )
+    -r, --replace            sort and replace files
+    -s, --suffix <suffix>    suffix for output files [default: sorted]
+    -V, --version            Print version information
 ```
 
 For example &mdash;
