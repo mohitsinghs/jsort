@@ -1,7 +1,7 @@
 [package]
 name = "jsort"
 authors = ["Mohit Singh <mohit@mohitsingh.in>"]
-version = "0.1.0"
+version = "0.1.1"
 edition = "2018"
 description = "A command line tool for sorting json"
 repository = "https://github.com/mohitsighs/jsort"
