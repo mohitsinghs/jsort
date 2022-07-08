@@ -7,7 +7,7 @@ description = "A command line tool for sorting json"
 repository = "https://github.com/mohitsighs/jsort"
 
 [dependencies]
-clap = { version = "3.1.8", features = ["cargo"] }
+clap = { version = "3.2.8", features = ["cargo"] }
 ignore = "0.4.18"
 json = "0.12.4"
 
