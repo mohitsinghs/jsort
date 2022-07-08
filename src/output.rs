@@ -1,9 +1,9 @@
 use std::{
     fs::{create_dir_all, File, OpenOptions},
-    path::Path,
+    path::{Path, PathBuf},
 };
 
-pub fn with_replace(path: &Path) -> File {
+pub fn ensure(path: &Path) -> File {
     OpenOptions::new()
         .create(true)
         .write(true)
@@ -12,15 +12,14 @@ pub fn with_replace(path: &Path) -> File {
         .expect("failed to write")
 }
 
-pub fn with_suffix(suffix: &str, path: &Path) -> File {
+pub fn with_suffix(suffix: &str, path: &Path) -> PathBuf {
     let mut suffixed = path.file_stem().unwrap().to_os_string();
     suffixed.push(format!("-{}.", suffix));
     suffixed.push(path.extension().unwrap());
-    with_replace(Path::new(&suffixed))
+    PathBuf::from(suffixed)
 }
 
-pub fn with_dir(dir: &str, path: &Path) -> File {
+pub fn with_dir(dir: &str, path: &Path) -> PathBuf {
     create_dir_all(dir).expect("failed to create output dir");
-    let output = Path::new(dir).join(path);
-    with_replace(output.as_path())
+    Path::new(dir).join(path).to_path_buf()
 }

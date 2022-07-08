@@ -7,26 +7,29 @@ pub fn parse() -> ArgMatches {
         .args(&[
             Arg::new("input")
                 .help("files/directory to process")
-                .index(1)
                 .required(true),
             Arg::new("replace")
                 .short('r')
                 .long("replace")
-                .help("sort and replace files")
-                .required(false)
-                .takes_value(false),
+                .conflicts_with_all(&["out", "suffix"])
+                .help("sort and replace files"),
             Arg::new("out")
                 .short('o')
                 .long("out")
-                .help("output directory ( ignores suffix )")
+                .conflicts_with_all(&["replace", "suffix"])
+                .help("output directory")
                 .takes_value(true)
-                .required(false),
+                .min_values(0)
+                .require_equals(true)
+                .default_missing_value("out"),
             Arg::new("suffix")
                 .short('s')
                 .long("suffix")
                 .help("suffix for output files")
-                .default_value("sorted")
-                .required(false),
+                .takes_value(true)
+                .min_values(0)
+                .require_equals(true)
+                .default_missing_value("sorted"),
         ]);
     cmd.get_matches()
 }

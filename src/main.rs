@@ -26,17 +26,16 @@ fn main() {
             let mut gen = Gen::new();
             gen.write_json(&data).unwrap();
             let res = gen.consume();
-
-            let suffix = matches.value_of("suffix").unwrap();
-            let mut f = output::with_suffix(suffix, dir.path());
-            if matches.is_present("out") {
-                f = output::with_dir(matches.value_of("out").unwrap_or("out"), dir.path())
-            }
-            if matches.is_present("replace") {
-                f = output::with_replace(dir.path())
-            }
-            f.write_all(res.as_bytes()).unwrap();
-            println!("Written {}", dir.path().display());
+            let f = if matches.is_present("out") {
+                output::with_dir(matches.value_of("out").unwrap_or("out"), dir.path())
+            } else if matches.is_present("replace") {
+                dir.path().to_path_buf()
+            } else {
+                let suffix = matches.value_of("suffix").unwrap_or("sorted");
+                output::with_suffix(suffix, dir.path())
+            };
+            output::ensure(&f).write_all(res.as_bytes()).unwrap();
+            println!("Written {}", f.display());
         }
     });
 }
