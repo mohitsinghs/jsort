@@ -1,0 +1,11 @@
+pub const SPACE: u8 = b' ';
+pub const COLON: u8 = b':';
+pub const COMMA: u8 = b',';
+pub const NEWLINE: u8 = b'\n';
+pub const CURLY_START: u8 = b'{';
+pub const CURLY_END: u8 = b'}';
+pub const SQUARE_START: u8 = b'[';
+pub const SQUARE_END: u8 = b']';
+pub const NULL: &[u8] = b"null";
+pub const TRUE: &[u8] = b"true";
+pub const FALSE: &[u8] = b"false";

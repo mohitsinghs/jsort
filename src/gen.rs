@@ -4,6 +4,11 @@ use json::JsonValue;
 use std::collections::BTreeMap;
 use std::io;
 
+use crate::constants::{
+    COLON, COMMA, CURLY_END, CURLY_START, FALSE, NEWLINE, NULL, SPACE, SQUARE_END, SQUARE_START,
+    TRUE,
+};
+
 /// Generator with sorting based on BTreeMap.
 pub struct Gen {
     code: Vec<u8>,
@@ -62,6 +67,17 @@ fn get_char_width(json: &JsonValue) -> usize {
     }
 }
 
+impl Gen {
+    #[inline(always)]
+    fn write_kv(&mut self, key: &&str, value: &&JsonValue) -> io::Result<()> {
+        self.write_string(key)?;
+        self.write_char(COLON)?;
+        self.write_char(SPACE)?;
+        self.write_json(value)?;
+        Ok(())
+    }
+}
+
 impl Generator for Gen {
     type T = Vec<u8>;
 
@@ -78,7 +94,7 @@ impl Generator for Gen {
 
     #[inline(always)]
     fn write_object(&mut self, object: &Object) -> io::Result<()> {
-        self.write_char(b'{')?;
+        self.write_char(CURLY_START)?;
         let entries: BTreeMap<_, _> = object.iter().collect();
 
         let mut iter = entries.iter();
@@ -86,47 +102,41 @@ impl Generator for Gen {
             self.key_length += key.len() as u16 + 3;
             self.indent();
             self.new_line()?;
-            self.write_string(key)?;
-            self.write_char(b':')?;
-            self.write_char(b' ')?;
-            self.write_json(value)?;
+            self.write_kv(key, value)?;
         } else {
-            self.write_char(b'}')?;
+            self.write_char(CURLY_END)?;
             self.key_length = 0;
             return Ok(());
         }
 
         for (key, value) in iter {
             self.key_length += key.len() as u16 + 3;
-            self.write_char(b',')?;
+            self.write_char(COMMA)?;
             self.new_line()?;
-            self.write_string(key)?;
-            self.write_char(b':')?;
-            self.write_char(b' ')?;
-            self.write_json(value)?;
+            self.write_kv(key, value)?;
         }
 
         self.dedent();
         self.new_line()?;
         self.key_length = 0;
-        self.write_char(b'}')
+        self.write_char(CURLY_END)
     }
 
     fn write_json(&mut self, json: &JsonValue) -> io::Result<()> {
         match *json {
-            JsonValue::Null => self.write(b"null"),
+            JsonValue::Null => self.write(NULL),
             JsonValue::Short(ref short) => self.write_string(short.as_str()),
             JsonValue::String(ref string) => self.write_string(string),
             JsonValue::Number(ref number) => self.write_number(number),
-            JsonValue::Boolean(true) => self.write(b"true"),
-            JsonValue::Boolean(false) => self.write(b"false"),
+            JsonValue::Boolean(true) => self.write(TRUE),
+            JsonValue::Boolean(false) => self.write(FALSE),
             JsonValue::Array(ref array) => {
                 let estimated_width = self.dent * self.spaces_per_indent
                     + get_char_width(json) as u16
                     + self.key_length
                     + 2;
                 let should_break: bool = estimated_width > self.max_width;
-                self.write_char(b'[')?;
+                self.write_char(SQUARE_START)?;
                 self.indent();
                 if should_break {
                     self.new_line()?;
@@ -135,11 +145,11 @@ impl Generator for Gen {
                 for (i, item) in array.iter().enumerate() {
                     self.write_json(item)?;
                     if i < array.len() - 1 {
-                        self.write_char(b',')?;
+                        self.write_char(COMMA)?;
                         if should_break {
                             self.new_line()?;
                         } else {
-                            self.write_char(b' ')?;
+                            self.write_char(SPACE)?;
                         }
                     }
                 }
@@ -148,16 +158,16 @@ impl Generator for Gen {
                 if should_break {
                     self.new_line()?;
                 }
-                self.write_char(b']')
+                self.write_char(SQUARE_END)
             }
             JsonValue::Object(ref object) => self.write_object(object),
         }
     }
 
     fn new_line(&mut self) -> io::Result<()> {
-        self.code.push(b'\n');
+        self.code.push(NEWLINE);
         for _ in 0..(self.dent * self.spaces_per_indent) {
-            self.code.push(b' ');
+            self.code.push(SPACE);
         }
         Ok(())
     }
